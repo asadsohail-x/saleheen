@@ -14,5 +14,9 @@
             android:id="@+id/tasbeehFragLink"
             android:icon="@drawable/beads"
             android:title="Tasbeeh" />
+        <item
+            android:id="@+id/quranFragLink"
+            android:icon="@drawable/quran"
+            android:title="Quran" />
     </group>
 </menu>

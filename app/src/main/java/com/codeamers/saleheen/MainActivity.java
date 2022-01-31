@@ -34,7 +34,7 @@ public class MainActivity extends AppCompatActivity {
         setupDrawerContent(nvDrawer);
 
         FragmentManager fragmentManager = getSupportFragmentManager();
-        fragmentManager.beginTransaction().replace(R.id.flContent, new PrayersFragment()).commit();
+        fragmentManager.beginTransaction().replace(R.id.flContent, new HomeFragment()).commit();
     }
 
     private ActionBarDrawerToggle setupDrawerToggle() {
@@ -58,6 +58,9 @@ public class MainActivity extends AppCompatActivity {
                 break;
             case R.id.tasbeehFragLink:
                 fragmentClass = TasbeehFragment.class;
+                break;
+            case R.id.quranFragLink:
+                fragmentClass = QuranFragment.class;
                 break;
             case R.id.homeFragLink:
             default:
