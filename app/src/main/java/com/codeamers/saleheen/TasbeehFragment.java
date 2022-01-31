@@ -1,14 +1,18 @@
 package com.codeamers.saleheen;
 
+import static android.content.SharedPreferences.*;
+
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 
+import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
@@ -25,12 +29,15 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.Set;
 
 public class TasbeehFragment extends Fragment {
 
     ImageButton addTasbeeh;
     DbService db;
     LinearLayout linearLayout;
+    SharedPreferences sp;
     public TasbeehFragment() {}
 
     public static TasbeehFragment newInstance() {
@@ -48,6 +55,7 @@ public class TasbeehFragment extends Fragment {
                              Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_tasbeeh, container, false);
         db = new DbService(getContext());
+        sp = this.getActivity().getSharedPreferences("TasbeehPref", Context.MODE_PRIVATE);
         loadTasbeeh(root);
 
         addTasbeeh = root.findViewById(R.id.addTasbeehId);
@@ -94,6 +102,19 @@ public class TasbeehFragment extends Fragment {
             liner.addView(txTitle);
             liner.addView(txCount);
             linearLayout.addView(liner);
+            liner.setOnClickListener(view ->{
+                Toast.makeText(getContext(), txTitle.getText().toString(), Toast.LENGTH_SHORT).show();
+                SharedPreferences.Editor edit = sp.edit();
+                edit.putString("TITLE" , txTitle.getText().toString());
+                edit.putString("COUNT" , txCount.getText().toString());
+                edit.apply();
+                getActivity()
+                        .getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.flContent,new SelectedTasbeehFragment())
+                        .addToBackStack(null)
+                        .commit();
+            });
         }
     }
 
