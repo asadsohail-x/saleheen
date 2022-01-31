@@ -40,6 +40,7 @@ public class HomeFragment extends Fragment {
                         .getSupportFragmentManager()
                         .beginTransaction()
                         .replace(R.id.flContent, PrayersFragment.newInstance())
+                        .addToBackStack(null)
                         .commit()
         );
         tasbeehFragBtn.setOnClickListener(view ->
@@ -47,6 +48,7 @@ public class HomeFragment extends Fragment {
                         .getSupportFragmentManager()
                         .beginTransaction()
                         .replace(R.id.flContent, TasbeehFragment.newInstance())
+                        .addToBackStack(null)
                         .commit()
         );
         quranFragBtn.setOnClickListener(view ->
@@ -54,6 +56,7 @@ public class HomeFragment extends Fragment {
                         .getSupportFragmentManager()
                         .beginTransaction()
                         .replace(R.id.flContent, QuranFragment.newInstance())
+                        .addToBackStack(null)
                         .commit()
         );
         return root;

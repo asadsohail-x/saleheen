@@ -5,6 +5,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
+
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.MenuItem;
@@ -15,11 +17,14 @@ public class MainActivity extends AppCompatActivity {
     private DrawerLayout mDrawer;
     private androidx.appcompat.widget.Toolbar toolbar;
     private ActionBarDrawerToggle drawerToggle;
+    DbService db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        db = new DbService(this);
 
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -74,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         FragmentManager fragmentManager = getSupportFragmentManager();
-        fragmentManager.beginTransaction().replace(R.id.flContent, fragment).commit();
+        fragmentManager.beginTransaction().replace(R.id.flContent, fragment).addToBackStack(null).commit();
 
         menuItem.setChecked(true);
         setTitle(menuItem.getTitle());
