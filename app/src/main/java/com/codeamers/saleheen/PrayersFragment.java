@@ -3,6 +3,7 @@ package com.codeamers.saleheen;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -14,10 +15,22 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonObjectRequest;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Date;
 
 public class PrayersFragment extends Fragment {
 
@@ -27,8 +40,11 @@ public class PrayersFragment extends Fragment {
 
     double longitude = 0.0, latitude = 0.0;
 
-    public PrayersFragment() {}
+    ImageButton locationBtn;
+    TextView todayDate, fajrTime, dhuhrTime, asrTime, maghribTime, ishaTime;
+    SharedPreferences sp;
 
+    public PrayersFragment() {}
     public static PrayersFragment newInstance() {
         return new PrayersFragment();
     }
@@ -36,57 +52,54 @@ public class PrayersFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-//        SharedPreferences sp = getActivity().getSharedPreferences("SALEHEEN_SP", Context.MODE_PRIVATE);
-//        if (sp.getBoolean("haveShownLocationAlert", true)) showLocationAlert();
-//        else Toast.makeText(getContext(), "Shown", Toast.LENGTH_SHORT).show();
-
-
-
-        /*
-            check if app has access to the internet
-            check if app has access to the location
-
-            if there is no internet
-                get last stored prayer times
-                show a message on top saying these are the last stored prayer times
-                if there are no last stored prayer times
-                    show user that app needs to connect to internet for pgetting prayer times
-
-            if location is granted
-                send lat-long to the api and get prayer times
-                show them in the xml
-            else
-                tell user that he can enable location anytime he wants by clicking that button
-
-                whatever city the user enters in the input field
-                send city name to api and get prayer times
-                if city valid
-                    show the prayer times in xml
-                else
-                    show invalid message
-         */
-
-    }
-
-    private void showLocationAlert() {
-        AlertDialog.Builder alertDialog = new AlertDialog.Builder(getContext());
-        alertDialog.setTitle("Prayer Times");
-        alertDialog.setMessage("You can either provide Location access or Enter City Name manually to get Prayer Times\n\n[Note: You can change it Later]\n");
-        alertDialog.setPositiveButton("Provide Location", (dialog, which) -> {
-            if (getLocationPermission() && getPermission(Manifest.permission.INTERNET, INTERNET_PERMISSION_CODE) ) {
-                fetchLocation();
-                fetchPrayerTimes();
-            } else {
-                Toast.makeText(getActivity(), "Understandable, Have a nice day!", Toast.LENGTH_LONG).show();
-            }
-        });
-        alertDialog.setNegativeButton("Provide City", (dialog, which) -> dialog.cancel());
-        alertDialog.show();
     }
 
     private void fetchPrayerTimes() {
         Toast.makeText(getContext(), "Fetching Prayer Times", Toast.LENGTH_SHORT).show();
+        String url = "https://api.pray.zone/v2/times/today.json?longitude=" + longitude + "&latitude=" + latitude;
+        JsonObjectRequest req = new JsonObjectRequest(
+                Request.Method.GET,
+                url,
+                null,
+                response -> {
+                    try {
+                        if (response.getInt("code") == 200) {
+                            JSONObject datetime = response.getJSONObject("results").getJSONArray("datetime").getJSONObject(0);
+                            JSONObject times = datetime.getJSONObject("times");
+                            JSONObject date = datetime.getJSONObject("date");
+
+                            SharedPreferences.Editor ed = sp.edit();
+
+                            ed.putString("Fajr", times.getString("Fajr"));
+                            ed.putString("Dhuhr", times.getString("Dhuhr"));
+                            ed.putString("Asr", times.getString("Asr"));
+                            ed.putString("Maghrib", times.getString("Maghrib"));
+                            ed.putString("Isha", times.getString("Isha"));
+                            ed.putString("Date", date.getString("hijri"));
+                            ed.apply();
+
+                            refreshUI();
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                }, error -> {
+            // TODO: Handle Error
+            Log.d("SAD", error.toString());
+        });
+        APIHandler.getInstance(getContext()).addToRequestQueue(req);
+    }
+
+    private void refreshUI() {
+        if (!sp.getString("Date", "-").equals("-")) {
+            todayDate.setText( sp.getString("Date", "-") );
+            fajrTime.setText( sp.getString("Fajr", "-") );
+            dhuhrTime.setText( sp.getString("Dhuhr", "-") );
+            asrTime.setText( sp.getString("Asr", "-") );
+            maghribTime.setText( sp.getString("Maghrib", "-") );
+            ishaTime.setText( sp.getString("Isha", "-") );
+        }
     }
 
     private boolean getPermission(String permission, int requestCode) {
@@ -101,20 +114,43 @@ public class PrayersFragment extends Fragment {
                 getPermission(Manifest.permission.ACCESS_FINE_LOCATION, FINE_LOCATION_PERMISSION_CODE);
     }
 
-    private void fetchLocation() {
+    private void fetchLocation(View v) {
         LocationFinder finder;
         finder = new LocationFinder(getContext());
+
+        if (!getLocationPermission()) {
+            Toast.makeText(getContext(), "Please Grant Location Permissions", Toast.LENGTH_LONG).show();
+        }
 
         if (finder.canGetLocation()) {
             latitude = finder.getLatitude();
             longitude = finder.getLongitude();
-            Toast.makeText(getContext(), "lat-lng " + latitude + " — " + longitude, Toast.LENGTH_LONG).show();
-        } else finder.showSettingsAlert();
+            Toast.makeText(getContext(), "Fetching Location", Toast.LENGTH_SHORT).show();
+            fetchPrayerTimes();
+        } else {
+            finder.showSettingsAlert();
+        }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_prayers, container, false);
+        View root = inflater.inflate(R.layout.fragment_prayers, container, false);
+
+        locationBtn = root.findViewById(R.id.locationBtn);
+        locationBtn.setOnClickListener(this::fetchLocation);
+
+        todayDate = root.findViewById(R.id.todayDate);
+        fajrTime = root.findViewById(R.id.fajrTime);
+        dhuhrTime = root.findViewById(R.id.dhuhrTime);
+        asrTime = root.findViewById(R.id.asrTime);
+        maghribTime = root.findViewById(R.id.maghribTime);
+        ishaTime = root.findViewById(R.id.ishaTime);
+
+        sp = root.getContext().getSharedPreferences("SALEHEEN_SP", Context.MODE_PRIVATE);
+
+        refreshUI();
+
+        return root;
     }
 
     @Override
@@ -122,21 +158,21 @@ public class PrayersFragment extends Fragment {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == INTERNET_PERMISSION_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(getContext(), "Internet Permission Granted", Toast.LENGTH_SHORT).show();
+//                Toast.makeText(getContext(), "Internet Permission Granted", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(getContext(), "Internet Permission Denied", Toast.LENGTH_SHORT).show();
             }
         }
         if (requestCode == COARSE_LOCATION_PERMISSION_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(getContext(), "Coarse Location Permission Granted", Toast.LENGTH_SHORT).show();
+//                Toast.makeText(getContext(), "Coarse Location Permission Granted", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(getContext(), "Coarse Location Permission Denied", Toast.LENGTH_SHORT).show();
             }
         }
         if (requestCode == FINE_LOCATION_PERMISSION_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(getContext(), "Fine Location Permission Granted", Toast.LENGTH_SHORT).show();
+//                Toast.makeText(getContext(), "Fine Location Permission Granted", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(getContext(), "Fine Location Permission Denied", Toast.LENGTH_SHORT).show();
             }

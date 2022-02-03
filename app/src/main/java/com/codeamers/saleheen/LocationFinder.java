@@ -67,10 +67,10 @@ public class LocationFinder extends Service implements LocationListener {
                 this.canGetLocation = true;
                 if (isNetworkEnabled) {
                     if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                        Toast.makeText(context, "FINE LOCATION NOT GRANTED", Toast.LENGTH_SHORT).show();
+
                     }
                     if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                        Toast.makeText(context, "COARSE LOCATION NOT GRANTED", Toast.LENGTH_SHORT).show();
+
                     }
                     locationManager.requestLocationUpdates(
                             LocationManager.NETWORK_PROVIDER,
