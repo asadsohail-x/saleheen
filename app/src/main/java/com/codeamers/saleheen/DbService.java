@@ -28,7 +28,6 @@ public class DbService extends SQLiteOpenHelper {
         db.execSQL(q);
     }
 
-
     public boolean insertTasbeeh(String title, String count){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();

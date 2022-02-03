@@ -28,18 +28,20 @@ public class MainActivity extends AppCompatActivity {
 
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
 
         mDrawer = findViewById(R.id.drawer_layout);
+
         drawerToggle = setupDrawerToggle();
         drawerToggle.setDrawerIndicatorEnabled(true);
         drawerToggle.syncState();
+
         mDrawer.addDrawerListener(drawerToggle);
+
         NavigationView nvDrawer = findViewById(R.id.nvView);
         setupDrawerContent(nvDrawer);
 
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        fragmentManager.beginTransaction().replace(R.id.flContent, new HomeFragment()).commit();
+        getSupportFragmentManager().beginTransaction().replace(R.id.flContent, new HomeFragment()).commit();
     }
 
     private ActionBarDrawerToggle setupDrawerToggle() {
@@ -51,7 +53,8 @@ public class MainActivity extends AppCompatActivity {
                 menuItem -> {
                     selectDrawerItem(menuItem);
                     return true;
-                });
+                }
+                );
     }
 
     public void selectDrawerItem(MenuItem menuItem) {
@@ -78,8 +81,7 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        fragmentManager.beginTransaction().replace(R.id.flContent, fragment).addToBackStack(null).commit();
+        getSupportFragmentManager().beginTransaction().replace(R.id.flContent, fragment).addToBackStack(null).commit();
 
         menuItem.setChecked(true);
         setTitle(menuItem.getTitle());
